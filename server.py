@@ -122,25 +122,32 @@ def like_song():
         track_id=song_data['track_id']
     ).first()
     
-    new_liked_song = LikedSong(
-        user_id=id,
-        track_name=song_data['track_name'],
-        track_id=song_data['track_id'],
-        track_artist=song_data['track_artist']
-    )
-    db.session.add(new_liked_song)
-    db.session.commit()
-
-    liked_songs.append(song_data)
-
+    # Check if the song is already liked by the user
     if existing_song:
+        # If the song is already liked, return a message and a 400 status code
         return jsonify({'message': 'Song already liked!'}), 400
-    return jsonify({'message': 'Song liked!', 'total_likes': len(liked_songs)})
+    else:
+        # If the song is not already liked, create a new LikedSong object
+        new_liked_song = LikedSong(
+            user_id=id,
+            track_name=song_data['track_name'],
+            track_id=song_data['track_id'],
+            track_artist=song_data['track_artist']
+        )
+        # Add the new LikedSong object to the database session
+        db.session.add(new_liked_song)
+        # Commit the session to save the changes to the database
+        db.session.commit()
+
+        # Append the song data to the liked_songs list
+        liked_songs.append(song_data)
+
+        # Return a message and the total number of liked songs
+        return jsonify({'message': 'Song liked!', 'total_likes': len(liked_songs)})
 
 @app.route('/get_liked_songs', methods=['GET'])
 def get_liked_songs():
     return jsonify(liked_songs)
-
 @app.route('/trending')
 def get_trending_songs():
     results = sp.playlist_tracks('37i9dQZEVXbMDoHDwVN2tF')
